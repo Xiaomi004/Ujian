@@ -56,6 +56,15 @@
         button:hover {
             background-color: #45a049;
         }
+
+        /* Styling untuk iframe ujian */
+        #examFrame {
+            display: none;
+            width: 100%;
+            height: 600px;
+            border: none;
+            margin-top: 20px;
+        }
     </style>
 </head>
 <body>
@@ -87,6 +96,9 @@
 
     <!-- Pinalti -->
     <div id="penalty">Pinalti: 0</div>
+
+    <!-- Iframe untuk ujian -->
+    <iframe id="examFrame" src="https://docs.google.com/forms/d/e/1FAIpQLSfe-3d4bTapsjpmsStpxdh3-HzgXUMgM0ro5qjnS_nTLQ6d0g/viewform?usp=sf_link"></iframe>
 
     <script>
         // Fungsi untuk mengakses kamera
@@ -144,10 +156,9 @@
             const major = document.getElementById("major").value;
 
             if (name && examId && className && major) {
-                // Hiding the login form and showing the test
+                // Hiding the login form and showing the test iframe
                 document.getElementById("loginForm").style.display = "none";
-                // Membuka Google Form di tab baru
-                window.open("https://docs.google.com/forms/d/e/1FAIpQLSfe-3d4bTapsjpmsStpxdh3-HzgXUMgM0ro5qjnS_nTLQ6d0g/viewform?usp=sf_link", "_blank");
+                document.getElementById("examFrame").style.display = "block"; // Menampilkan iframe ujian
             } else {
                 alert("Semua kolom harus diisi!");
             }
