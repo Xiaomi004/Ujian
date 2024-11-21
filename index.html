@@ -65,6 +65,40 @@
             border: none;
             margin-top: 20px;
         }
+
+        /* Styling untuk pesan peringatan */
+        #warningMessage {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: red;
+            color: white;
+            font-size: 30px;
+            font-weight: bold;
+            padding: 20px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+            z-index: 9999;
+        }
+        
+        /* Pesan untuk peringatan jaringan */
+        #networkWarning {
+            position: absolute;
+            top: 200px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: yellow;
+            color: black;
+            font-size: 24px;
+            font-weight: bold;
+            padding: 10px;
+            border-radius: 10px;
+            display: none;
+            text-align: center;
+            z-index: 9999;
+        }
     </style>
 </head>
 <body>
@@ -99,6 +133,12 @@
 
     <!-- Iframe untuk ujian -->
     <iframe id="examFrame" src="https://docs.google.com/forms/d/e/1FAIpQLSfe-3d4bTapsjpmsStpxdh3-HzgXUMgM0ro5qjnS_nTLQ6d0g/viewform?usp=sf_link"></iframe>
+
+    <!-- Peringatan curang -->
+    <div id="warningMessage">ANDA TELAH CURANG! UJIAN DIBATALKAN!</div>
+
+    <!-- Peringatan koneksi jaringan -->
+    <div id="networkWarning">Koneksi Anda hilang! Periksa jaringan Anda!</div>
 
     <script>
         // Fungsi untuk mengakses kamera
@@ -142,11 +182,38 @@
             "Perhatian, kecurangan akan membuat ujian batal."
         ];
 
-        // Fungsi untuk menampilkan pesan peringatan
+        // Fungsi untuk menampilkan pesan peringatan curang
         function showWarningMessage() {
-            const randomIndex = Math.floor(Math.random() * warningMessages.length);
-            alert(warningMessages[randomIndex]);
+            const warningElement = document.getElementById("warningMessage");
+            warningElement.style.display = "block"; // Menampilkan peringatan
+            setTimeout(function() {
+                warningElement.style.display = "none"; // Menyembunyikan peringatan setelah 5 detik
+            }, 5000);
         }
+
+        // Fungsi untuk menampilkan peringatan jaringan
+        function showNetworkWarning() {
+            const networkWarning = document.getElementById("networkWarning");
+            networkWarning.style.display = "block"; // Menampilkan peringatan jaringan
+            setTimeout(function() {
+                networkWarning.style.display = "none"; // Menyembunyikan peringatan setelah 5 detik
+            }, 5000);
+        }
+
+        // Memeriksa status koneksi jaringan
+        function checkNetworkStatus() {
+            if (navigator.onLine) {
+                // Jika jaringan tersedia, sembunyikan peringatan
+                document.getElementById("networkWarning").style.display = "none";
+            } else {
+                // Jika jaringan hilang, tampilkan peringatan
+                showNetworkWarning();
+            }
+        }
+
+        // Memantau perubahan status jaringan secara real-time
+        window.addEventListener('online', checkNetworkStatus);
+        window.addEventListener('offline', checkNetworkStatus);
 
         // Menangani klik tombol "Mulai Ujian"
         document.getElementById("startButton").addEventListener("click", function() {
@@ -164,34 +231,31 @@
             }
         });
 
-        // Penanganan untuk mendeteksi saat pengguna keluar atau beralih tab
-        let blurTime = 0;
-        let penaltyInterval;
+// Penanganan untuk mendeteksi saat pengguna keluar atau beralih tab
+        let pageFocusTime = Date.now(); // Waktu ketika halaman pertama kali difokuskan
 
-        // Saat tab kehilangan fokus, mulai hitung waktu
-        window.onblur = function() {
-            blurTime = new Date().getTime();
-        };
+        window.addEventListener("focus", function() {
+            pageFocusTime = Date.now(); // Setel ulang waktu saat kembali ke tab
+        });
 
-        // Saat tab kembali ke fokus, hitung waktu yang telah berlalu
-        window.onfocus = function() {
-            const currentTime = new Date().getTime();
-            const timeDiff = (currentTime - blurTime) / 1000; // waktu dalam detik
-            if (timeDiff > 3) {
-                addPenalty();
-                showWarningMessage();
+        window.addEventListener("blur", function() {
+            let timeAway = Date.now() - pageFocusTime; // Hitung berapa lama pengguna tidak berada di tab
+
+            // Jika pengguna tidak ada di tab lebih dari 3 detik, beri peringatan curang
+            if (timeAway > 3000) {
+                addPenalty(); // Tambahkan poin pinalti
+                showWarningMessage(); // Tampilkan pesan peringatan
             }
-        };
+        });
 
-        // Fungsi untuk menghentikan kamera ketika halaman ditutup atau berpindah
-        window.onbeforeunload = function() {
-            const videoElement = document.getElementById('cameraStream');
-            if (videoElement.srcObject) {
-                let stream = videoElement.srcObject;
-                let tracks = stream.getTracks();
-                tracks.forEach(track => track.stop());
-            }
-        };
+        // Menampilkan peringatan jika ada curang atau pelanggaran lainnya
+        function monitorExam() {
+            // Menampilkan peringatan jika ada pelanggaran lain
+            // Bisa disesuaikan lebih lanjut sesuai kebijakan
+        }
+
+        // Memulai fungsi pemantauan ujian
+        setInterval(monitorExam, 1000); // Memantau setiap detik
     </script>
 </body>
 </html>
