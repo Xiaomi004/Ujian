@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CAT UJIAN SMK PP N PADANG MENGATAS</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f4;
+      color: #333;
+    }
+    .container {
+      text-align: center;
+      margin-top: 50px;
+    }
+    .form-container {
+      background-color: white;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .form-container input, .form-container select {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      border: 1px solid #ddd;
+    }
+    .form-container button {
+      background-color: #28a745;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .form-container button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .video-container {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      width: 45px;
+      height: 90px;
+      border: 2px solid #ddd;
+      background-color: #fff;
+    }
+    #penalty-box {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      font-weight: bold;
+    }
+    #penalty-box span {
+      color: red;
+    }
+    #student-info {
+      position: fixed;
+      top: 110px;
+      right: 10px;
+      text-align: center;
+      font-size: 14px;
+      background-color: rgba(255, 255, 255, 0.7);
+      padding: 10px;
+      border-radius: 5px;
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="form-container" id="loginForm">
+      <h2>CAT UJIAN SMK PP N PADANG MENGATAS</h2>
+      <form id="studentForm">
+        <input type="text" id="name" placeholder="Nama" required>
+        <input type="text" id="exam-number" placeholder="Nomor Ujian" required>
+        <input type="text" id="class" placeholder="Kelas" required>
+        <select id="major" required>
+          <option value="">Pilih Jurusan</option>
+          <option value="atu">ATU</option>
+          <option value="atr">ATR</option>
+          <option value="kh">KH</option>
+        </select>
+        <button id="startBtn" type="button" disabled onclick="startExam()">Mulai Ujian</button>
+      </form>
+    </div>
+    <div id="penalty-box">
+      Pinalti: <span id="penalty">0</span>
+    </div>
+    <div id="video-container" class="video-container">
+      <video id="video" autoplay></video>
+    </div>
+    <div id="student-info">
+      <p id="student-name">Nama: -</p>
+      <p id="student-penalty">Pinalti: 0</p>
+    </div>
+  </div>
+
+  <script>
+    let penalty = 0;
+    let penaltyTime = 0;
+    let studentName = "";
+
+    // Request for camera access as soon as the page loads
+    window.onload = function() {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(function(stream) {
+          const videoElement = document.getElementById('video');
+          videoElement.srcObject = stream;
+        })
+        .catch(function(err) {
+          alert('Gagal mendapatkan akses kamera. Harap izinkan akses kamera untuk melanjutkan.');
+          window.location.reload(); // Reload to try accessing camera again
+        });
+    };
+
+    // Function to enable start button when user input is filled
+    document.getElementById('name').addEventListener('input', checkInput);
+    document.getElementById('exam-number').addEventListener('input', checkInput);
+    document.getElementById('class').addEventListener('input', checkInput);
+    document.getElementById('major').addEventListener('change', checkInput);
+
+    function checkInput() {
+      const name = document.getElementById('name').value;
+      const examNumber = document.getElementById('exam-number').value;
+      const className = document.getElementById('class').value;
+      const major = document.getElementById('major').selectedOptions.length;
+
+      // Enable start button if all fields are filled
+      if (name && examNumber && className && major > 0) {
+        document.getElementById('startBtn').disabled = false;
+      } else {
+        document.getElementById('startBtn').disabled = true;
+      }
+    }
+
+    // Start exam and show Google Form
+    function startExam() {
+      // Get student name from input
+      studentName = document.getElementById('name').value;
+
+      // Display student name and set initial penalty
+      document.getElementById('student-name').innerText = `Nama: ${studentName}`;
+      document.getElementById('student-penalty').innerText = `Pinalti: ${penalty}`;
+
+      // Minimize login form
+      document.getElementById('loginForm').style.display = 'none';
+      
+      // Open Google Form in a new tab
+      window.open('https://docs.google.com/forms/d/e/1FAIpQLSfe-3d4bTapsjpmsStpxdh3-HzgXUMgM0ro5qjnS_nTLQ6d0g/viewform?usp=sf_link', '_blank');
+      
+      // Disable start button after exam started
+      document.getElementById('startBtn').disabled = true;
+      
+      // Monitor tab activity
+      monitorTabActivity();
+    }
+
+    // Function to monitor tab activity
+    function monitorTabActivity() {
+      let penaltyCount = 0;
+      let timer = null;
+
+      window.onblur = function() {
+        penaltyCount++;
+        updatePenalty(penaltyCount);
+        if (penaltyCount > 2) {
+          alert("Anda curang! Ujian dihentikan.");
+          window.location.reload(); // Reload the page to end the exam
+        }
+      };
+
+      window.onfocus = function() {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          penaltyCount++;
+          updatePenalty(penaltyCount);
+          if (penaltyCount > 2) {
+            alert("Anda curang! Ujian dihentikan.");
+            window.location.reload();
+          }
+        }, 3000); // Detect inactivity for more than 3 seconds
+      };
+    }
+
+    // Update penalty count and show in the penalty box
+    function updatePenalty(count) {
+      document.getElementById('penalty').innerText = count;
+      document.getElementById('student-penalty').innerText = `Pinalti: ${count}`;
+    }
+  </script>
+</body>
+</html>
