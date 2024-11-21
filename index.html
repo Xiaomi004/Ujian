@@ -26,10 +26,61 @@
             font-size: 14px;
             border-radius: 5px;
         }
+
+        /* Styling untuk form login */
+        #loginForm {
+            display: flex;
+            flex-direction: column;
+            width: 300px;
+            margin: auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        input[type="text"], input[type="number"], select, button {
+            margin: 10px 0;
+            padding: 10px;
+            font-size: 14px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
     <h1>Ujian Online - Akses Kamera</h1>
+
+    <!-- Form Login -->
+    <div id="loginForm">
+        <label for="name">Nama:</label>
+        <input type="text" id="name" placeholder="Nama siswa">
+        
+        <label for="examId">No Ujian:</label>
+        <input type="number" id="examId" placeholder="No Ujian">
+        
+        <label for="class">Kelas:</label>
+        <input type="text" id="class" placeholder="Kelas">
+
+        <label for="major">Jurusan:</label>
+        <select id="major">
+            <option value="atu">ATU</option>
+            <option value="atr">ATR</option>
+            <option value="kh">KH</option>
+        </select>
+
+        <button id="startButton">Mulai Ujian</button>
+    </div>
 
     <!-- Video kamera -->
     <video id="cameraStream" autoplay></video>
@@ -65,12 +116,62 @@
             penaltyDisplay.textContent = "Pinalti: " + penaltyPoints;
         }
 
-        // Memicu penalti setiap kali tab berubah
+        // Pesan peringatan kecurangan
+        const warningMessages = [
+            "Jangan curang! Ujian harus dilakukan dengan jujur.",
+            "Peringatan! Anda telah berpindah tab lebih dari 3 detik.",
+            "Kecurangan akan dihukum! Tetap fokus pada ujian.",
+            "Curang dapat berakibat fatal, tetap jujur selama ujian.",
+            "Peringatan, berpindah tab akan menambah poin pinalti.",
+            "Jika Anda curang, ujian akan otomatis dihentikan.",
+            "Mengalihkan perhatian dari ujian akan mengurangi skor Anda.",
+            "Tidak ada tempat untuk kecurangan dalam ujian ini.",
+            "Anda telah melanggar aturan, tetap fokus pada ujian.",
+            "Perhatian, kecurangan akan membuat ujian batal."
+        ];
+
+        // Fungsi untuk menampilkan pesan peringatan
+        function showWarningMessage() {
+            const randomIndex = Math.floor(Math.random() * warningMessages.length);
+            alert(warningMessages[randomIndex]);
+        }
+
+        // Menangani klik tombol "Mulai Ujian"
+        document.getElementById("startButton").addEventListener("click", function() {
+            const name = document.getElementById("name").value;
+            const examId = document.getElementById("examId").value;
+            const className = document.getElementById("class").value;
+            const major = document.getElementById("major").value;
+
+            if (name && examId && className && major) {
+                // Hiding the login form and showing the test
+                document.getElementById("loginForm").style.display = "none";
+                window.open("https://docs.google.com/forms/d/e/1FAIpQLSfe-3d4bTapsjpmsStpxdh3-HzgXUMgM0ro5qjnS_nTLQ6d0g/viewform?usp=sf_link", "_blank");
+            } else {
+                alert("Semua kolom harus diisi!");
+            }
+        });
+
+        // Penanganan untuk mendeteksi saat pengguna keluar atau beralih tab
+        let blurTime = 0;
+        let penaltyInterval;
+
+        // Saat tab kehilangan fokus, mulai hitung waktu
         window.onblur = function() {
-            addPenalty();
+            blurTime = new Date().getTime();
         };
 
-        // Menghentikan kamera ketika halaman diubah atau ditutup
+        // Saat tab kembali ke fokus, hitung waktu yang telah berlalu
+        window.onfocus = function() {
+            const currentTime = new Date().getTime();
+            const timeDiff = (currentTime - blurTime) / 1000; // waktu dalam detik
+            if (timeDiff > 3) {
+                addPenalty();
+                showWarningMessage();
+            }
+        };
+
+        // Fungsi untuk menghentikan kamera ketika halaman ditutup atau berpindah
         window.onbeforeunload = function() {
             const videoElement = document.getElementById('cameraStream');
             if (videoElement.srcObject) {
